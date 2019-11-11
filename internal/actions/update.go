@@ -4,6 +4,8 @@ import (
 	"github.com/containrrr/watchtower/internal/util"
 	"github.com/containrrr/watchtower/pkg/container"
 	log "github.com/sirupsen/logrus"
+	"fmt"
+	"time"
 )
 
 // Update looks at the running Docker containers to see if any of the images
@@ -65,10 +67,25 @@ func stopStaleContainer(container container.Container, client container.Client, 
 		return
 	}
 
-	executePreUpdateCommand(client, container)
+	updater := container.GetLifecycleUpdaterContainer()
+	if len(updater) > 0 {
+		workDir := container.GetLifecycleWorkDir()
+		servicesList := container.GetLifecycleServices()
 
-	if err := client.StopContainer(container, params.Timeout); err != nil {
-		log.Error(err)
+		command := fmt.Sprintf("auc %s \"%s\"", workDir, servicesList)
+
+		log.Info("Executing updater command: " + command)
+		if err := client.ExecuteCommand(updater, command); err != nil {
+			log.Error(err)
+		}
+
+		time.Sleep(30 * time.Second)
+	} else {
+		executePreUpdateCommand(client, container)
+
+		if err := client.StopContainer(container, params.Timeout); err != nil {
+			log.Error(err)
+		}
 	}
 }
 
@@ -93,11 +110,16 @@ func restartStaleContainer(container container.Container, client container.Clien
 		}
 	}
 
+	updater := container.GetLifecycleUpdaterContainer()
+	canRestart := len(updater) == 0
+
 	if !params.NoRestart {
-		if newContainerID, err := client.StartContainer(container); err != nil {
-			log.Error(err)
-		} else if container.Stale && params.LifecycleHooks {
-			executePostUpdateCommand(client, newContainerID)
+		if canRestart {
+			if newContainerID, err := client.StartContainer(container); err != nil {
+				log.Error(err)
+			} else if container.Stale && params.LifecycleHooks {
+				executePostUpdateCommand(client, newContainerID)
+			}
 		}
 	}
 

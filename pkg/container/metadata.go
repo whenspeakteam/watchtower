@@ -9,6 +9,10 @@ const (
 	postCheckLabel  = "com.centurylinklabs.watchtower.lifecycle.post-check"
 	preUpdateLabel  = "com.centurylinklabs.watchtower.lifecycle.pre-update"
 	postUpdateLabel = "com.centurylinklabs.watchtower.lifecycle.post-update"
+
+	updaterContainerLabel = "com.centurylinklabs.watchtower.lifecycle.updater"
+	workDirLabel = "com.centurylinklabs.watchtower.lifecycle.workdir"
+	servicesLabel = "com.centurylinklabs.watchtower.lifecycle.services"
 )
 
 // GetLifecyclePreCheckCommand returns the pre-check command set in the container metadata or an empty string
@@ -29,6 +33,18 @@ func (c Container) GetLifecyclePreUpdateCommand() string {
 // GetLifecyclePostUpdateCommand returns the post-update command set in the container metadata or an empty string
 func (c Container) GetLifecyclePostUpdateCommand() string {
 	return c.getLabelValueOrEmpty(postUpdateLabel)
+}
+
+func (c Container) GetLifecycleUpdaterContainer() string {
+	return c.getLabelValueOrEmpty(updaterContainerLabel)
+}
+
+func (c Container) GetLifecycleWorkDir() string {
+	return c.getLabelValueOrEmpty(workDirLabel)
+}
+
+func (c Container) GetLifecycleServices() string {
+	return c.getLabelValueOrEmpty(servicesLabel)
 }
 
 // ContainsWatchtowerLabel takes a map of labels and values and tells
