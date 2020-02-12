@@ -71,8 +71,9 @@ func stopStaleContainer(container container.Container, client container.Client, 
 	if len(updater) > 0 {
 		workDir := container.GetLifecycleWorkDir()
 		servicesList := container.GetLifecycleServices()
+		scale := container.GetLifecycleScale()
 
-		command := fmt.Sprintf("auc %s \"%s\"", workDir, servicesList)
+		command := fmt.Sprintf("auc %s \"%s\" \"%s\"", workDir, servicesList, scale)
 
 		log.Info("Executing updater command: " + command)
 		if err := client.ExecuteCommand(updater, command); err != nil {
